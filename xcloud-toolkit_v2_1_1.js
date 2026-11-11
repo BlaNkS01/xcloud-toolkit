@@ -102,6 +102,9 @@
     logOnce('loading settings', e);
     settings = { ...defaults };
   }
+  if (!['shooter', 'standard', 'racing'].includes(settings.preset)) {
+    settings.preset = defaults.preset;
+  }
   // Delayed write (avoids a write on every slider event)
   let saveTimer = 0;
   const flushSettings = () => {
@@ -275,6 +278,8 @@
     vibrationActuator: null,
   };
   const keysDown = new Set();
+  const buttonSources = new Map();
+  const analogButtons = new Map();
   let kbmEnabled = false;
   let mdx = 0;
   let mdy = 0;
@@ -286,10 +291,13 @@
   let lastPadTime = performance.now();
 
   function setAnalog(i, v) {
+    const value = clamp(v, 0, 1);
+    if (value > 0) analogButtons.set(i, value);
+    else analogButtons.delete(i);
     const b = vpad.buttons[i];
-    b.value = v;
-    b.pressed = v > 0.1;
-    b.touched = v > 0;
+    b.value = Math.max(value, buttonSources.get(i) && buttonSources.get(i).size ? 1 : 0);
+    b.pressed = b.value > 0.1;
+    b.touched = b.value > 0;
   }
 
   function setButton(i, down) {
@@ -299,13 +307,41 @@
     b.value = down ? 1 : 0;
   }
 
+  function refreshButton(i) {
+    const analog = analogButtons.get(i) || 0;
+    const sources = buttonSources.get(i);
+    const value = Math.max(analog, sources && sources.size ? 1 : 0);
+    const b = vpad.buttons[i];
+    b.value = value;
+    b.pressed = value > 0.1;
+    b.touched = value > 0;
+  }
+
+  function setSourceButton(source, i, down) {
+    let sources = buttonSources.get(i);
+    if (!sources) {
+      sources = new Set();
+      buttonSources.set(i, sources);
+    }
+
+    if (down) sources.add(source);
+    else sources.delete(source);
+
+    if (sources.size === 0) buttonSources.delete(i);
+    refreshButton(i);
+  }
+
   function releaseAll() {
     keysDown.clear();
+    buttonSources.clear();
+    analogButtons.clear();
     vpad.buttons.forEach((_, i) => setButton(i, false));
     vpad.axes = [0, 0, 0, 0];
     mdx = 0;
     mdy = 0;
     mouseHeld.clear();
+    clearTimeout(wheelTimer);
+    wheelTimer = null;
     steer = 0;
     thr = 0;
     brk = 0;
@@ -440,7 +476,7 @@
     e.preventDefault();
     e.stopPropagation();
     keysDown.add(code);
-    if (code in map) setButton(map[code], true);
+    if (code in map) setSourceButton('key:' + code, map[code], true);
   }
 
   function onKbmKeyUp(e) {
@@ -448,7 +484,7 @@
     if (!keysDown.has(code)) return;
     keysDown.delete(code);
     const map = activeMap();
-    if (code in map) setButton(map[code], false);
+    if (code in map) setSourceButton('key:' + code, map[code], false);
     if (kbmEnabled) { e.preventDefault(); e.stopPropagation(); }
   }
 
@@ -464,7 +500,7 @@
     if (document.pointerLockElement) {
       if (e.button in MOUSEMAP) {
         mouseHeld.add(e.button);
-        setButton(MOUSEMAP[e.button], true);
+        setSourceButton('mouse:' + e.button, MOUSEMAP[e.button], true);
         e.preventDefault();
         e.stopPropagation();
       }
@@ -482,18 +518,21 @@
     e.preventDefault();
     e.stopPropagation();
     if (settings.preset !== 'shooter') return;
-    setButton(BTN.Y, true);
+    setSourceButton('wheel', BTN.Y, true);
     clearTimeout(wheelTimer);
-    wheelTimer = setTimeout(() => setButton(BTN.Y, false), 90);
+    wheelTimer = setTimeout(() => {
+      setSourceButton('wheel', BTN.Y, false);
+      wheelTimer = null;
+    }, 90);
   }
 
   function onKbmMouseUp(e) {
-    if (e.button in MOUSEMAP) {
-      mouseHeld.delete(e.button);
-      const was = vpad.buttons[MOUSEMAP[e.button]].pressed;
-      setButton(MOUSEMAP[e.button], false);
-      if (was && kbmEnabled) { e.preventDefault(); e.stopPropagation(); }
-    }
+    if (!(e.button in MOUSEMAP)) return;
+    mouseHeld.delete(e.button);
+    const i = MOUSEMAP[e.button];
+    const was = vpad.buttons[i].pressed;
+    setSourceButton('mouse:' + e.button, i, false);
+    if (was && kbmEnabled) { e.preventDefault(); e.stopPropagation(); }
   }
 
   /* ---------- Helper for building elements (no innerHTML) ---------- */
@@ -1377,8 +1416,8 @@
     return el ? gpCleanTitle(el.textContent) : '';
   }
 
-  function gpDetect() {
-    const inGame = /\/launch\//i.test(location.pathname) || isStreaming();
+  function gpDetect(streaming = isStreaming()) {
+    const inGame = /\/launch\//i.test(location.pathname) || streaming;
     if (!inGame) return null;
     const u = gpFromUrl();
     let name = '';
@@ -1576,10 +1615,11 @@
   }
 
   function gpDetectStep() {
-    const sig = location.href + '\u0001' + document.title;
+    const streaming = isStreaming();
+    const sig = location.href + '\u0001' + document.title + '\u0001' + (streaming ? '1' : '0');
     if (sig === gp.sig && gp.curKey && !gp.candN) return; // nothing changed
     gp.sig = sig;
-    const d = gpDetect();
+    const d = gpDetect(streaming);
     const k = d ? (d.pid || d.norm) : '';
     if (k === gp.curKey) { gp.candKey = ''; gp.candN = 0; return; }
     if (!gp.candN || k !== gp.candKey) { gp.candKey = k; gp.candN = 1; return; } // confirmed over 2 cycles
@@ -1953,26 +1993,48 @@
   function screenshot() {
     const video = document.querySelector('video');
     if (!video || !video.videoWidth) { toast('No video stream available'); return; }
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    canvas.toBlob((blob) => {
-      if (!blob) { toast('Screenshot failed'); return; }
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `xcloud-${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-      toast('Screenshot saved');
-    }, 'image/png');
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { toast('Screenshot failed'); return; }
+      ctx.drawImage(video, 0, 0);
+      canvas.toBlob((blob) => {
+        if (!blob) { toast('Screenshot failed'); return; }
+        let url = null;
+        try {
+          url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `xcloud-${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          toast('Screenshot saved');
+        } catch (e) {
+          toast('Screenshot failed');
+        } finally {
+          if (url) setTimeout(() => URL.revokeObjectURL(url), 5000);
+        }
+      }, 'image/png');
+    } catch (e) {
+      toast('Screenshot failed');
+    }
   }
 
   function toggleFullscreen() {
-    if (document.fullscreenElement) document.exitFullscreen();
-    else document.documentElement.requestFullscreen().catch(() => toast('Fullscreen blocked'));
+    try {
+      const result = document.fullscreenElement
+        ? document.exitFullscreen()
+        : document.documentElement.requestFullscreen();
+
+      if (result && result.catch) {
+        result.catch(() => toast('Fullscreen blocked'));
+      }
+    } catch (e) {
+      toast('Fullscreen blocked');
+    }
   }
 
   /* ---------- Shortcuts ---------- */
@@ -2100,8 +2162,11 @@
       document.addEventListener('pointerlockchange', () => {
         if (document.pointerLockElement) toast('Mouse locked. Press Esc to release.');
         else {
-          vpad.buttons.forEach((_, i) => { if (i === BTN.RT || i === BTN.LT) setButton(i, false); });
-          mdx = 0; mdy = 0;
+          Object.entries(MOUSEMAP).forEach(([button, gamepadButton]) => {
+            setSourceButton('mouse:' + button, gamepadButton, false);
+          });
+          mdx = 0;
+          mdy = 0;
           mouseHeld.clear();
         }
       });
