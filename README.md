@@ -76,34 +76,54 @@ Some controls and games may behave differently, and browser pointer-lock permiss
 
 ## 📸 Screenshots
 
-Real screenshots from the toolkit in use. Click any image to view it at full size.
+Explore real gameplay captures showing the toolkit's automatic game profiles, customizable controls and live stream diagnostics. Select an image to open the full-resolution screenshot.
 
-<details open>
-<summary><strong>🎯 ARC Raiders — Shooter profile</strong></summary>
+### 🌌 No Man's Sky — Sandbox profile
 
-![ARC Raiders gameplay with Xbox Cloud Toolkit](https://github.com/user-attachments/assets/efe6fa78-bee0-4f39-9c84-9ef277f2aded)
-![ARC Raiders toolkit profile](https://github.com/user-attachments/assets/1c82d7d5-a287-4b7f-9311-d1630753a3aa)
+Automatic sandbox profile, keyboard and mouse settings, image enhancement and performance monitoring.
 
-</details>
+![No Man's Sky — space scene with Xbox Cloud Toolkit controls and live HUD](https://github.com/user-attachments/assets/565a26ef-972b-422d-9cd6-e8feebd791a9)
 
 <details>
-<summary><strong>🏎️ Forza Horizon 6 — Racing profile (screenshot example)</strong></summary>
+<summary>View 3 more No Man's Sky screenshots</summary>
 
-![Forza racing profile screenshot 1](https://github.com/user-attachments/assets/412ebb55-f631-4b6c-be49-d4060fcd01e3)
-![Forza racing profile screenshot 2](https://github.com/user-attachments/assets/ba5458cb-905f-416f-8322-77b0b2abf0e2)
-![Forza racing profile screenshot 3](https://github.com/user-attachments/assets/20540350-91f5-475e-98d5-76fd157544ac)
+![No Man's Sky — character with control settings and performance HUD](https://github.com/user-attachments/assets/8702df73-5355-49fb-b005-0e1582232021)
+
+![No Man's Sky — expanded playtime and profile manager controls](https://github.com/user-attachments/assets/de601e06-665c-45fc-b0b6-ef91eecb781e)
+
+![No Man's Sky — gameplay with compact stream statistics](https://github.com/user-attachments/assets/202c80ac-9fbf-4bcd-9713-84e79f962400)
 
 </details>
+
+### 🏎️ Forza Horizon 6 — Racing profile
+
+Racing preset detection, keyboard steering controls and live RTT, jitter and bitrate graphs.
+
+![Forza Horizon 6 — racing game with live performance HUD](https://github.com/user-attachments/assets/20540350-91f5-475e-98d5-76fd157544ac)
 
 <details>
-<summary><strong>🌌 No Man's Sky — Sandbox profile</strong></summary>
+<summary>View 2 more Forza Horizon 6 screenshots</summary>
 
-![No Man's Sky screenshot 1](https://github.com/user-attachments/assets/202c80ac-9fbf-4bcd-9713-84e79f962400)
-![No Man's Sky screenshot 2](https://github.com/user-attachments/assets/de601e06-665c-45fc-b0b6-ef91eecb781e)
-![No Man's Sky screenshot 3](https://github.com/user-attachments/assets/8702df73-5355-49fb-b005-0e1582232021)
-![No Man's Sky screenshot 4](https://github.com/user-attachments/assets/565a26ef-972b-422d-9cd6-e8feebd791a9)
+![Forza Horizon 6 — racing preset and keyboard controls](https://github.com/user-attachments/assets/ba5458cb-905f-416f-8322-77b0b2abf0e2)
+
+![Forza Horizon 6 — game screen with compact network statistics](https://github.com/user-attachments/assets/412ebb55-f631-4b6c-be49-d4060fcd01e3)
 
 </details>
+
+### 🎯 ARC Raiders — Shooter profile
+
+Shooter profile detection, mouse sensitivity adjustments and real-time network monitoring.
+
+![ARC Raiders — shooter preset with toolkit controls](https://github.com/user-attachments/assets/1c82d7d5-a287-4b7f-9311-d1630753a3aa)
+
+<details>
+<summary>View another ARC Raiders screenshot</summary>
+
+![ARC Raiders — performance HUD and connection score](https://github.com/user-attachments/assets/efe6fa78-bee0-4f39-9c84-9ef277f2aded)
+
+</details>
+
+> Screenshots illustrate toolkit features during gameplay. Stream quality and available metrics depend on the current session.
 
 ## ⌨️ Keyboard shortcuts
 
