@@ -2,17 +2,19 @@
 
 # 🎮 Xbox Cloud Toolkit
 
-**A userscript companion for Xbox Cloud Gaming**
+**Free, open-source browser toolkit for Xbox Cloud Gaming — Tampermonkey or Chrome / Edge**
 
 Keyboard & Mouse · Virtual Xbox Controller · Game Profiles · Performance HUD · WebRTC Diagnostics · Image Controls
 
-![Version](https://img.shields.io/badge/version-2.1.1-107C10?style=flat-square)
+![Tampermonkey](https://img.shields.io/badge/Tampermonkey-v2.1.1-107C10?style=flat-square)
+![Chrome / Edge](https://img.shields.io/badge/Chrome%20%2F%20Edge-v2.1.2-0078D7?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-Xbox%20Cloud%20Gaming-107C10?style=flat-square)
 ![Userscript](https://img.shields.io/badge/userscript-Tampermonkey-blue?style=flat-square)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](./LICENSE)
 [![JavaScript checks](https://github.com/BlaNkS01/xcloud-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/BlaNkS01/xcloud-toolkit/actions/workflows/ci.yml)
 
 [![Install with Tampermonkey](https://img.shields.io/badge/Install%20Script-Tampermonkey-107C10?style=for-the-badge&logo=tampermonkey&logoColor=white)](https://github.com/BlaNkS01/xcloud-toolkit/raw/refs/heads/main/xcloud-toolkit_v2_1_1.js)
+[![Get Chrome / Edge Extension](https://img.shields.io/badge/Get%20Extension-Chrome%20%2F%20Edge-0078D7?style=for-the-badge&logo=googlechrome&logoColor=white)](./extension/)
 
 [**Install**](#-installation) · [**Changelog**](./CHANGELOG.md) · [**Contributing**](./CONTRIBUTING.md) · [**Security**](./SECURITY.md) · [**Features**](#-features) · [**Screenshots**](#-screenshots) · [**Shortcuts**](#-keyboard-shortcuts) · [**Troubleshooting**](#-troubleshooting)
 
@@ -24,17 +26,30 @@ Keyboard & Mouse · Virtual Xbox Controller · Game Profiles · Performance HUD 
 
 **Xbox Cloud Toolkit** enhances your browser-based Xbox Cloud Gaming experience with customizable keyboard and mouse controls, a virtual Xbox controller, per-game profiles, stream performance monitoring, and visual adjustments.
 
-It runs as a browser userscript on supported Xbox Cloud Gaming pages. **It does not change your Xbox region, bypass service restrictions, or improve the underlying internet connection.**
+It runs either as a Tampermonkey userscript or as an unpacked Chrome / Edge browser extension on supported Xbox Cloud Gaming pages. **It does not change your Xbox region, bypass service restrictions, or improve the underlying internet connection.**
 
 ## 🚀 Installation
 
-1. Install a browser userscript manager such as [Tampermonkey](https://www.tampermonkey.net/) and enable userscripts as required by your browser.
-2. Click the **Install Script** button above to open the current userscript source, or open the [Xbox Cloud Toolkit userscript](./xcloud-toolkit_v2_1_1.js).
-3. Click **Raw** on GitHub, then follow your userscript manager's installation prompt. If no prompt appears, create a new userscript in Tampermonkey, paste the script contents, and save it.
-4. Open [Xbox Cloud Gaming](https://www.xbox.com/play) or [play.xbox.com](https://play.xbox.com/).
-5. Start a cloud gaming session and press **Alt + V** to show the toolkit panel.
+Choose **one** installation method. Do not enable both at the same time, or the toolkit may load twice.
 
-> **Note:** A supported browser, access to Xbox Cloud Gaming, and an eligible account/subscription may be required. Available features depend on your browser and the game. GitHub's Raw link may display the source instead of automatically launching installation.
+### Option A — Chrome / Edge extension (v2.1.2)
+
+1. [Download the repository ZIP](https://github.com/BlaNkS01/xcloud-toolkit/archive/refs/heads/main.zip) and extract it.
+2. Open `chrome://extensions` in Chrome or `edge://extensions` in Edge.
+3. Turn on **Developer mode**, then select **Load unpacked**.
+4. Select the extracted **`extension`** folder (it contains `manifest.json`).
+5. Open [Xbox Cloud Gaming](https://www.xbox.com/play), start a game, and press **Alt + V** to open the toolkit.
+
+This is an **unpacked developer extension**, not a Chrome Web Store or Edge Add-ons listing. See the [extension guide](./extension/README.md).
+
+### Option B — Tampermonkey userscript (v2.1.1)
+
+1. Install [Tampermonkey](https://www.tampermonkey.net/) and enable userscripts as required by your browser.
+2. Click **Install Script** above, or open [the userscript](./xcloud-toolkit_v2_1_1.js) and choose **Raw**.
+3. Follow Tampermonkey's installation prompt. If no prompt appears, create a userscript, paste the source and save.
+4. Open [Xbox Cloud Gaming](https://www.xbox.com/play) or [play.xbox.com](https://play.xbox.com/), start a session, and press **Alt + V**.
+
+> **Note:** A supported browser, Xbox Cloud Gaming access and an eligible account/subscription may be required. Features depend on the browser and game. GitHub Raw may show source instead of triggering installation.
 
 ## ✨ Features
 
@@ -160,8 +175,8 @@ The script matches the configured Xbox Cloud Gaming URL patterns; it is not a st
 
 | Problem | What to try |
 | --- | --- |
-| Toolkit does not appear | Confirm Tampermonkey is enabled, the script is active, and you opened a supported Xbox Cloud Gaming URL. Reload the page and try `Alt + V`. |
-| Keyboard/mouse does not respond | Start a game stream, enable mapping with `Alt + K`, and try pointer lock with `Alt + M`. Check that another userscript is not intercepting input. |
+| Toolkit does not appear | Confirm your chosen installation is enabled (Tampermonkey or the unpacked extension), and you opened a supported Xbox Cloud Gaming URL. Reload the page and try `Alt + V`. |
+| Keyboard/mouse does not respond | Start a game stream, enable mapping with `Alt + K`, and try pointer lock with `Alt + M`. Make sure the extension and userscript are not both enabled, and check for other input-mapping tools. |
 | HUD shows missing values | Start an active stream and allow time for WebRTC data to become available. Browser support and metric availability vary. |
 | A game has the wrong profile | Open `Alt + J` and manually adjust the selected profile or preset. |
 | Screenshot fails | A live video frame must be available; browser restrictions may prevent canvas capture or downloading. |
@@ -170,21 +185,24 @@ The script matches the configured Xbox Cloud Gaming URL patterns; it is not a st
 
 If a problem persists, open a [GitHub issue](https://github.com/BlaNkS01/xcloud-toolkit/issues) and include your browser, userscript manager version, steps to reproduce, and relevant console errors. Avoid sharing account credentials or sensitive data.
 
-## 📦 Version
+## 📦 Versions
 
-**Current version: v2.1.1**
+| Installation | Version | Source |
+| --- | --- | --- |
+| Tampermonkey userscript | **v2.1.1** | [Userscript](./xcloud-toolkit_v2_1_1.js) |
+| Chrome / Edge extension | **v2.1.2** | [Extension](./extension/) |
 
-The v2.1.1 release focuses on English localization:
+The userscript v2.1.1 focuses on English localization:
 
 - English interface, tooltips and notifications
 - English console messages
 - Improved Profile Manager localization
 
-These localization updates do not intentionally change functionality.
+These localization updates do not intentionally change functionality. The extension v2.1.2 includes updated mouse input handling. Both installation methods have been tested in games by the maintainer; compatibility is not guaranteed for every game or browser.
 
 ## ⚠️ Disclaimer
 
-Xbox Cloud Toolkit is an independent community userscript and is **not affiliated with, endorsed by, or supported by Microsoft or Xbox**. Xbox, Xbox Cloud Gaming and game names are trademarks of their respective owners. Use at your own discretion; game and platform behavior can change.
+Xbox Cloud Toolkit is an independent community project and is **not affiliated with, endorsed by, or supported by Microsoft or Xbox**. Xbox, Xbox Cloud Gaming and game names are trademarks of their respective owners. Use at your own discretion; game and platform behavior can change.
 
 ---
 
