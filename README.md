@@ -112,16 +112,11 @@ Racing preset detection, keyboard steering controls and live RTT, jitter and bit
 
 ### 🎯 ARC Raiders — Shooter profile
 
-Shooter profile detection, mouse sensitivity adjustments and real-time network monitoring.
+Automatic **Shooter** profile detection, keyboard and mouse controls, aiming sensitivity and the live performance HUD.
 
-![ARC Raiders — shooter preset with toolkit controls](https://github.com/user-attachments/assets/1c82d7d5-a287-4b7f-9311-d1630753a3aa)
+![ARC Raiders — shooter profile with keyboard and mouse controls](https://github.com/user-attachments/assets/1c82d7d5-a287-4b7f-9311-d1630753a3aa)
 
-<details>
-<summary>View another ARC Raiders screenshot</summary>
-
-![ARC Raiders — performance HUD and connection score](https://github.com/user-attachments/assets/efe6fa78-bee0-4f39-9c84-9ef277f2aded)
-
-</details>
+![ARC Raiders — gameplay with connection score, latency and bitrate graphs](https://github.com/user-attachments/assets/efe6fa78-bee0-4f39-9c84-9ef277f2aded)
 
 > Screenshots illustrate toolkit features during gameplay. Stream quality and available metrics depend on the current session.
 
