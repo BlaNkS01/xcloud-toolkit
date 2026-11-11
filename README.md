@@ -9,10 +9,12 @@ Keyboard & Mouse · Virtual Xbox Controller · Game Profiles · Performance HUD 
 ![Version](https://img.shields.io/badge/version-2.1.1-107C10?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-Xbox%20Cloud%20Gaming-107C10?style=flat-square)
 ![Userscript](https://img.shields.io/badge/userscript-Tampermonkey-blue?style=flat-square)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](./LICENSE)
+[![JavaScript checks](https://github.com/BlaNkS01/xcloud-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/BlaNkS01/xcloud-toolkit/actions/workflows/ci.yml)
 
 [![Install with Tampermonkey](https://img.shields.io/badge/Install%20Script-Tampermonkey-107C10?style=for-the-badge&logo=tampermonkey&logoColor=white)](https://github.com/BlaNkS01/xcloud-toolkit/raw/refs/heads/main/xcloud-toolkit_v2_1_1.js)
 
-[**Install**](#-installation) · [**Features**](#-features) · [**Screenshots**](#-screenshots) · [**Shortcuts**](#-keyboard-shortcuts) · [**Troubleshooting**](#-troubleshooting)
+[**Install**](#-installation) · [**Changelog**](./CHANGELOG.md) · [**Contributing**](./CONTRIBUTING.md) · [**Security**](./SECURITY.md) · [**Features**](#-features) · [**Screenshots**](#-screenshots) · [**Shortcuts**](#-keyboard-shortcuts) · [**Troubleshooting**](#-troubleshooting)
 
 </div>
 
