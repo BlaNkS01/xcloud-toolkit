@@ -1320,13 +1320,27 @@
   const GP_FAST_MS = 1000; // while a transition is being confirmed
   const GP_RANGE = { mouseSens: [20, 500], adsSens: [20, 150], deadzone: [0, 30], steerSpeed: [10, 100] };
   const GP_NUM = Object.keys(GP_RANGE);
-  const GP_CATS = { Shooter: 'shooter', FPS: 'shooter', Racing: 'racing', Sandbox: 'standard', Default: null };
+  // Categories select existing controller layouts; saved per-game profiles take priority.
+  const GP_CATS = {
+    Shooter: 'shooter', FPS: 'shooter', Racing: 'racing', Sandbox: 'standard',
+    RPG: 'standard', Adventure: 'standard', Sports: 'standard', Fighting: 'standard',
+    Platformer: 'standard', Strategy: 'standard', Simulation: 'standard', Default: null,
+  };
   const GP_RULES = [
-    [/\barc\s*raiders\b/i, 'Shooter'],
-    [/\bforza\b|need for speed|\bf1\b|dirt rally|wreckfest|grid legends|the crew|gran turismo|assetto|burnout/i, 'Racing'],
-    [/\bhalo\b|call of duty|battlefield|\bdoom\b|destiny|apex legends|valorant|overwatch|\bquake\b/i, 'FPS'],
-    [/fortnite|\bgears\b|the division|borderlands|helldivers|cyberpunk|ready or not/i, 'Shooter'],
-    [/minecraft|terraria|no man.?s sky|satisfactory|palworld|\bgrounded\b|valheim|roblox/i, 'Sandbox'],
+    // Specific spin-offs must precede their parent series.
+    [/\b(?:minecraft dungeons|minecraft legends)\b/i, 'Adventure'],
+    [/\b(?:halo wars|gears tactics)\b/i, 'Strategy'],
+    [/\b(?:forza|need for speed|f1(?:\s+\d+)?|dirt(?: rally)?|ea sports wrc|wrc|wreckfest|grid legends|the crew|assetto corsa|burnout|hot wheels unleashed|trackmania|descenders|riders republic|moto\s?gp|ride \d+|rocket racing|sonic racing|crash team racing)\b/i, 'Racing'],
+    [/\b(?:arc[\s-]*raiders|fortnite|gears(?: of war)?|the division|borderlands|helldivers|remnant|warframe|outriders|sniper elite|zombie army|pubg|playerunknown|dayz|hunt showdown|hunt: showdown|vigor|the first descendant)\b/i, 'Shooter'],
+    [/\b(?:halo|call of duty|black ops|warzone|battlefield|doom|destiny|apex legends|valorant|overwatch|quake|rainbow six|counter[\s-]strike|wolfenstein|far cry|crysis|titanfall|battlefront|atomic heart|deathloop|dishonored|prey|metro|stalker|s\.t\.a\.l\.k\.e\.r|back 4 blood|left 4 dead|darktide|vermintide|deep rock galactic|high on life|rage 2|serious sam|ready or not|payday|delta force|insurgency|hell let loose|enlisted|splitgate|the finals|bioshock)\b/i, 'FPS'],
+    [/\b(?:minecraft|terraria|no man.?s sky|satisfactory|palworld|grounded|valheim|roblox|ark|rust|astroneer|subnautica|conan exiles|core keeper|starbound|craftopia|slime rancher|lego fortnite)\b/i, 'Sandbox'],
+    [/\b(?:ea sports fc|ea sports fifa|fifa|efootball|pro evolution soccer|madden|nba\s?2k\d*|nba live|nhl|mlb the show|pga tour|pga\s?2k\d*|wwe\s?2k\d*|ufc|football manager|rocket league|tony hawk|skate|steep|session: skate|descenders next)\b/i, 'Sports'],
+    [/\b(?:mortal kombat|tekken|street fighter|killer instinct|injustice|dragon ball fighterz|dragon ball sparking|guilty gear|king of fighters|brawlhalla|multiversus|gang beasts|party animals)\b/i, 'Fighting'],
+    [/\b(?:elden ring|dark souls|demon.?s souls|sekiro|lies of p|lords of the fallen|wo long|nioh|the witcher|cyberpunk|fallout|starfield|the elder scrolls|skyrim|oblivion|avowed|the outer worlds|fable|diablo|path of exile|baldur.?s gate|dragon age|mass effect|final fantasy|persona|metaphor|clair obscur|expedition 33|hogwarts legacy|dragon.?s dogma|monster hunter|assassin.?s creed|kingdom come|kingdoms of amalur|octopath|sea of stars|chained echoes|yakuza|like a dragon|ni no kuni|tales of arise|disco elysium|wasteland|pillars of eternity|divinity)\b/i, 'RPG'],
+    [/\b(?:ori|hollow knight|silksong|celeste|cuphead|psychonauts|crash bandicoot|spyro|sonic|unravel|limbo|inside|little nightmares|super meat boy|dead cells|rogue legacy|shovel knight|battletoads|new super lucky|a hat in time|rayman|banjo|conker|it takes two|split fiction|unravel two)\b/i, 'Platformer'],
+    [/\b(?:age of empires|age of mythology|civilization|crusader kings|stellaris|frostpunk|cities.? skylines|command\s*(?:&|and)\s*conquer|xcom|phoenix point|wartales|total war|tropico|anno|dungeons 4|against the storm|humankind|northgard|manor lords)\b/i, 'Strategy'],
+    [/\b(?:flight simulator|farming simulator|powerwash simulator|train sim|train simulator|truck simulator|snowrunner|mudrunner|expeditions: a mudrunner|roadcraft|construction simulator|house flipper|the sims|planet coaster|planet zoo|jurassic world evolution|two point|car mechanic simulator|goat simulator|stardew valley|coral island|my time at|disney dreamlight valley|fishing planet|fishing simulator|thehunter|the angler)\b/i, 'Simulation'],
+    [/\b(?:grand theft auto|gta|red dead|sea of thieves|indiana jones|tomb raider|resident evil|silent hill|dead space|the evil within|alan wake|control|quantum break|senua|hellblade|a plague tale|death stranding|metal gear|hitman|watch dogs|batman|gotham knights|suicide squad|star wars|jedi|outlaws|guardians of the galaxy|marvel|supraland|outer wilds|firewatch|what remains of edith finch|life is strange|walking dead|detroit|south of midnight|hi[\s-]fi rush|hades|vampire survivors|brotato|balatro|slay the spire|among us|fall guys|overcooked|moving out|human fall flat|poppy playtime|five nights at freddy|dead by daylight|phasmophobia)\b/i, 'Adventure'],
   ];
   const GP_CODE_RE = /^[A-Z][A-Za-z0-9]{1,23}$/;
   const GP_BAD_SLUG = /^(recently-played|all-games|library|catalog|search|home|new|popular|browse)$/i;
