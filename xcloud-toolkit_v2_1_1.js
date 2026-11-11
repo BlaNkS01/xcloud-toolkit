@@ -2,7 +2,7 @@
 // @name         Xbox Cloud
 // @namespace    local.xcloud.toolkit
 // @version      2.1.1
-// @description  Statistici de stream, boost de imagine, tastatura + mouse (gamepad virtual), screenshot si scurtaturi pentru xCloud (play.xbox.com si xbox.com/play). Nu modifica regiunea sau conexiunea.
+// @description  Stream stats, image boost, keyboard & mouse (virtual gamepad), screenshot and shortcuts for xCloud (play.xbox.com and xbox.com/play). Does not change region or connection.
 // @match        https://play.xbox.com/*
 // @match        https://www.xbox.com/*/play*
 // @match        https://www.xbox.com/play*
@@ -15,14 +15,14 @@
   'use strict';
 
   if (window.__xcloudToolkitInitialized) {
-    console.warn('[Xbox Cloud] deja initializat - instanta duplicata ignorata');
+    console.warn('[Xbox Cloud] already initialized - duplicate instance ignored');
     return;
   }
   window.__xcloudToolkitInitialized = true;
 
-  console.log('[Xbox Cloud] script pornit pe', location.href);
+  console.log('[Xbox Cloud] script started on', location.href);
 
-  /* ---------- Log + acces localStorage sigur ---------- */
+  /* ---------- Logging + safe localStorage access ---------- */
   const warned = new Set();
   function logOnce(ctx, err) {
     if (warned.has(ctx)) return;
@@ -32,21 +32,21 @@
   const isObj = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
 
   function dropCorrupt(key, why) {
-    logOnce('date corupte in ' + key, why);
-    try { localStorage.removeItem(key); } catch (e) { /* ignorat */ }
+    logOnce('corrupt data in ' + key, why);
+    try { localStorage.removeItem(key); } catch (e) { /* ignored */ }
     return null;
   }
 
-  // Citeste un obiect JSON; intoarce null daca lipseste, e invalid sau corupt
+  // Reads a JSON object; returns null if missing, invalid or corrupt
   function readJSON(key) {
     let txt;
-    try { txt = localStorage.getItem(key); } catch (e) { logOnce('citire ' + key, e); return null; }
+    try { txt = localStorage.getItem(key); } catch (e) { logOnce('reading ' + key, e); return null; }
     if (typeof txt !== 'string' || !txt) return null;
     const t = txt.trim();
-    if (t.length > 2000000 || t[0] !== '{' || t[t.length - 1] !== '}') return dropCorrupt(key, 'format invalid');
+    if (t.length > 2000000 || t[0] !== '{' || t[t.length - 1] !== '}') return dropCorrupt(key, 'invalid format');
     try {
       const v = JSON.parse(t);
-      return isObj(v) ? v : dropCorrupt(key, 'nu e obiect');
+      return isObj(v) ? v : dropCorrupt(key, 'not an object');
     } catch (e) {
       return dropCorrupt(key, e);
     }
@@ -57,12 +57,12 @@
       localStorage.setItem(key, JSON.stringify(value));
       return true;
     } catch (e) {
-      logOnce('scriere ' + key, e);
+      logOnce('writing ' + key, e);
       return false;
     }
   }
 
-  /* ---------- Setari persistente ---------- */
+  /* ---------- Persistent settings ---------- */
   const KEY = 'xcloud-toolkit-settings';
   const defaults = {
     statsVisible: true,
@@ -70,12 +70,12 @@
     contrast: 100,
     saturation: 100,
     sharpen: 0,        // 0-100
-    kbm: false,        // tastatura + mouse
+    kbm: false,        // keyboard + mouse
     mouseSens: 100,    // 20-300 (%)
     preset: 'shooter', // 'shooter' | 'standard' | 'racing'
-    steerSpeed: 60,    // 10-100 viteza cu care se roteste volanul (curse)
-    adsSens: 70,       // 20-150 (%) cand tii apasat click dreapta (tintire)
-    deadzone: 10,      // 0-30 (%) compensare zona moarta stick drept
+    steerSpeed: 60,    // 10-100 how fast the wheel turns (racing)
+    adsSens: 70,       // 20-150 (%) while right click is held (aiming)
+    deadzone: 10,      // 0-30 (%) right stick deadzone compensation
   };
   const SETTING_RANGE = {
     brightness: [50, 150], contrast: [50, 150], saturation: [0, 200], sharpen: [0, 100],
@@ -85,7 +85,7 @@
   try {
     const stored = readJSON(KEY);
     if (stored) {
-      if (typeof stored.sharpen !== 'number') stored.sharpen = stored.sharpen ? 40 : 0; // migrare veche
+      if (typeof stored.sharpen !== 'number') stored.sharpen = stored.sharpen ? 40 : 0; // legacy migration
       for (const k of Object.keys(defaults)) {
         const v = stored[k];
         if (typeof defaults[k] === 'number') {
@@ -99,10 +99,10 @@
       }
     }
   } catch (e) {
-    logOnce('incarcare setari', e);
+    logOnce('loading settings', e);
     settings = { ...defaults };
   }
-  // Scriere intarziata (evita o scriere la fiecare eveniment de slider)
+  // Delayed write (avoids a write on every slider event)
   let saveTimer = 0;
   const flushSettings = () => {
     clearTimeout(saveTimer);
@@ -113,7 +113,7 @@
   const save = () => { if (!saveTimer) saveTimer = setTimeout(flushSettings, 250); };
   const clamp = (v, lo = -1, hi = 1) => Math.max(lo, Math.min(hi, v));
 
-  /* ---------- Timp jucat (doar cat timp ruleaza un stream) ---------- */
+  /* ---------- Playtime (only while a stream is running) ---------- */
   const PT_KEY = 'xcloud-toolkit-playtime';
   let playtime = { total: 0, days: {} };
   try {
@@ -128,7 +128,7 @@
       const total = Number(raw.total);
       playtime = { total: Number.isFinite(total) && total >= 0 ? total : 0, days };
     }
-  } catch (e) { logOnce('incarcare timp jucat', e); }
+  } catch (e) { logOnce('loading playtime', e); }
   let sessionSec = 0;
   let idleSec = 0;
   let lastTick = Date.now();
@@ -151,8 +151,8 @@
     return hh ? `${hh}h ${mm}m` : `${mm}m`;
   };
   const ptText = () =>
-    `Sesiune:   ${fmtClock(sessionSec)}\n` +
-    `Azi:       ${fmtLong(playtime.days[todayKey()] || 0)}\n` +
+    `Session:   ${fmtClock(sessionSec)}\n` +
+    `Today:     ${fmtLong(playtime.days[todayKey()] || 0)}\n` +
     `Total:     ${fmtLong(playtime.total)}`;
 
   function savePlaytime() {
@@ -160,7 +160,7 @@
       const keys = Object.keys(playtime.days).sort();
       while (keys.length > 60) delete playtime.days[keys.shift()];
       writeJSON(PT_KEY, playtime);
-    } catch (e) { logOnce('salvare timp jucat', e); }
+    } catch (e) { logOnce('saving playtime', e); }
   }
 
   function isStreaming() {
@@ -185,13 +185,13 @@
       playtime.days[k] = (playtime.days[k] || 0) + dt;
     } else {
       idleSec += dt;
-      if (idleSec > 60) sessionSec = 0; // sesiune noua dupa 1 minut fara stream
+      if (idleSec > 60) sessionSec = 0; // new session after 1 minute without a stream
     }
     if (now - lastSave > 10000) { lastSave = now; savePlaytime(); }
     if (ptEl && panelEl && panelEl.style.display === 'block') setTxt(ptEl, ptText());
   }
 
-  /* ---------- Urmarire conexiuni WebRTC (doar citire statistici) ---------- */
+  /* ---------- WebRTC connection tracking (read-only stats) ---------- */
   const connections = new Set();
   try {
     const NativePC = window.RTCPeerConnection;
@@ -199,7 +199,7 @@
       const WrappedPC = function (...args) {
         const pc = new NativePC(...args);
         connections.add(pc);
-        console.log('[Xbox Cloud] conexiune WebRTC detectata');
+        console.log('[Xbox Cloud] WebRTC connection detected');
         pc.addEventListener('connectionstatechange', () => {
           if (pc.connectionState === 'closed' || pc.connectionState === 'failed') {
             connections.delete(pc);
@@ -212,13 +212,13 @@
       window.RTCPeerConnection = WrappedPC;
     }
   } catch (e) {
-    console.warn('[Xbox Cloud] nu am putut urmari WebRTC:', e);
+    console.warn('[Xbox Cloud] could not track WebRTC:', e);
   }
 
   /* ====================================================================
-   *  Tastatura + mouse -> gamepad virtual
-   *  Jocul citeste navigator.getGamepads(); cand modul e activ, slotul 0
-   *  returneaza un gamepad virtual comandat de tastatura si mouse.
+   *  Keyboard + mouse -> virtual gamepad
+   *  The game reads navigator.getGamepads(); when the mode is active, slot 0
+   *  returns a virtual gamepad driven by the keyboard and mouse.
    * ==================================================================== */
   const BTN = {
     A: 0, B: 1, X: 2, Y: 3, LB: 4, RB: 5, LT: 6, RT: 7,
@@ -236,7 +236,7 @@
       KeyQ: BTN.LB, KeyG: BTN.RB, ShiftLeft: BTN.L3, KeyF: BTN.R3, KeyV: BTN.R3,
       Tab: BTN.VIEW, Enter: BTN.MENU, Backquote: BTN.GUIDE, ...ARROWS,
     },
-    // Curse (Forza etc.): W/S = acceleratie/frana, A/D = volan (netezit)
+    // Racing (Forza etc.): W/S = throttle/brake, A/D = steering (smoothed)
     racing: {
       Space: BTN.A, Enter: BTN.A, KeyR: BTN.X, KeyC: BTN.Y,
       KeyF: BTN.B, Backspace: BTN.B,
@@ -247,19 +247,19 @@
   const activeMap = () => PRESETS[settings.preset] || PRESETS.shooter;
   const LEGENDS = {
     shooter:
-      'WASD = miscare · mouse = camera · click stang = foc (RT) · click dreapta = tintire (LT) · '
-      + 'Space = sari (A) · C = ghemuit (B) · R sau E = reincarca / foloseste (X) · '
-      + '1 sau rotita mouse = schimba arma (Y) · Q = LB · G = grenada (RB) · Shift = sprint (L3) · '
-      + 'F, V sau click mijloc = melee (R3) · Tab = scor (View) · Enter = Menu · sageti = D-pad · ` = Guide.',
+      'WASD = move · mouse = camera · left click = fire (RT) · right click = aim (LT) · '
+      + 'Space = jump (A) · C = crouch (B) · R or E = reload / use (X) · '
+      + '1 or mouse wheel = switch weapon (Y) · Q = LB · G = grenade (RB) · Shift = sprint (L3) · '
+      + 'F, V or middle click = melee (R3) · Tab = scoreboard (View) · Enter = Menu · arrows = D-pad · ` = Guide.',
     racing:
-      'W = accelereaza (RT) · S = frana / marsarier (LT) · A/D = volan · Shift = volan fin (jumatate) · '
-      + 'Space = frana de mana (A) · R = rewind (X) · C = schimba camera (Y) · Q/E = treapta jos / sus (LB/RB) · '
-      + 'H = claxon (L3) · V = priveste in spate (R3) · mouse = camera · '
-      + 'Enter = confirma (A) · F sau Backspace = inapoi (B) · Tab = View · P = Menu · sageti = D-pad · ` = Guide.',
+      'W = accelerate (RT) · S = brake / reverse (LT) · A/D = steer · Shift = fine steering (half) · '
+      + 'Space = handbrake (A) · R = rewind (X) · C = change camera (Y) · Q/E = shift down / up (LB/RB) · '
+      + 'H = horn (L3) · V = look back (R3) · mouse = camera · '
+      + 'Enter = confirm (A) · F or Backspace = back (B) · Tab = View · P = Menu · arrows = D-pad · ` = Guide.',
     standard:
-      'WASD = stick stang · mouse = stick drept · click stang = RT · click dreapta = LT · '
+      'WASD = left stick · mouse = right stick · left click = RT · right click = LT · '
       + 'Space = A · C = B · R = X · F = Y · Q/E = LB/RB · Shift = L3 · V = R3 · '
-      + 'Tab = View · Enter = Menu · sageti = D-pad · ` = Guide.',
+      + 'Tab = View · Enter = Menu · arrows = D-pad · ` = Guide.',
   };
   const MOVE_KEYS = ['KeyW', 'KeyA', 'KeyS', 'KeyD'];
   const MOUSEMAP = { 0: BTN.RT, 2: BTN.LT, 1: BTN.R3 };
@@ -323,7 +323,7 @@
     lastPadTime = now;
     const racing = settings.preset === 'racing';
     if (racing) {
-      // Volan: rampa spre tinta (nu on/off), ca sa nu fie brusc cu tastatura
+      // Steering: ramp toward the target (not on/off) so it isn't abrupt with a keyboard
       let target = (k('KeyD') ? 1 : 0) - (k('KeyA') ? 1 : 0);
       if (k('ShiftLeft')) target *= 0.5;
       const rate = 0.5 + (settings.steerSpeed / 100) * 8;
@@ -334,7 +334,7 @@
       steer += clamp(target - steer, -step, step);
       lx = steer;
       ly = 0;
-      // Acceleratie si frana progresive (trigger analogic)
+      // Progressive throttle and brake (analog trigger)
       const rtTarget = (k('KeyW') || mouseHeld.has(0)) ? 1 : 0;
       const ltTarget = (k('KeyS') || mouseHeld.has(2)) ? 1 : 0;
       thr += clamp(rtTarget - thr, -10 * dt, 6 * dt);
@@ -343,12 +343,12 @@
       setAnalog(BTN.LT, brk);
     }
 
-    // Sensibilitate redusa cand tintesti (click dreapta = LT apasat)
+    // Reduced sensitivity while aiming (right click = LT pressed)
     const ads = !racing && vpad.buttons[BTN.LT].pressed ? settings.adsSens / 100 : 1;
     const f = 0.04 * (settings.mouseSens / 100) * ads;
     let rx = mdx * f;
     let ry = mdy * f;
-    // Compensare zona moarta: miscarile mici ajung peste pragul ignorat de joc
+    // Deadzone compensation: small movements get past the threshold the game ignores
     const mag = Math.hypot(rx, ry);
     if (mag > 0) {
       const dz = settings.deadzone / 100;
@@ -376,7 +376,7 @@
       const ev = new Event(type);
       ev.gamepad = vpad;
       window.dispatchEvent(ev);
-    } catch (e) { /* ignorat */ }
+    } catch (e) { /* ignored */ }
   }
 
   try {
@@ -392,7 +392,7 @@
       return out;
     };
   } catch (e) {
-    console.warn('[Xbox Cloud] nu am putut inlocui getGamepads:', e);
+    console.warn('[Xbox Cloud] could not override getGamepads:', e);
   }
 
   let kbmCheckbox = null;
@@ -405,12 +405,12 @@
     if (on) {
       fireGamepadEvent('gamepadconnected');
       if (!kbmLoopRunning) { kbmLoopRunning = true; requestAnimationFrame(kbmLoop); }
-      if (!quiet) toast('Tastatura + mouse ACTIV. Click pe imagine sau Alt+M pentru a bloca mouse-ul (Esc il elibereaza).');
+      if (!quiet) toast('Keyboard & Mouse ENABLED. Click the video or press Alt+M to lock the mouse (Esc releases it).');
     } else {
       releaseAll();
       fireGamepadEvent('gamepaddisconnected');
       if (document.pointerLockElement) document.exitPointerLock();
-      if (!quiet) toast('Tastatura + mouse DEZACTIVAT');
+      if (!quiet) toast('Keyboard & Mouse DISABLED');
     }
   }
 
@@ -421,12 +421,12 @@
 
   function lockPointer() {
     const v = document.querySelector('video');
-    if (!v) { toast('Nu exista un stream video'); return; }
+    if (!v) { toast('No video stream available'); return; }
     try {
       const p = v.requestPointerLock({ unadjustedMovement: true });
       if (p && p.catch) p.catch(() => v.requestPointerLock());
     } catch (e) {
-      try { v.requestPointerLock(); } catch (e2) { /* ignorat */ }
+      try { v.requestPointerLock(); } catch (e2) { /* ignored */ }
     }
   }
 
@@ -470,12 +470,12 @@
       }
       return;
     }
-    // Click pe video -> blocheaza mouse-ul
+    // Click on video -> lock the mouse
     const v = document.querySelector('video');
     if (v && e.target && (e.target === v || v.contains(e.target))) lockPointer();
   }
 
-  // Rotita mouse = schimba arma (apasare scurta pe Y), doar in modul shooter
+  // Mouse wheel = switch weapon (short press on Y), shooter mode only
   let wheelTimer = null;
   function onKbmWheel(e) {
     if (!kbmEnabled || !document.pointerLockElement) return;
@@ -496,7 +496,7 @@
     }
   }
 
-  /* ---------- Ajutor pentru construirea elementelor (fara innerHTML) ---------- */
+  /* ---------- Helper for building elements (no innerHTML) ---------- */
   function h(tag, attrs, ...children) {
     const node = document.createElement(tag);
     for (const [k, v] of Object.entries(attrs || {})) {
@@ -507,7 +507,7 @@
     return node;
   }
 
-  /* ---------- Stiluri ---------- */
+  /* ---------- Styles ---------- */
   const CSS = `
     video.xct-filtered {
       filter: brightness(var(--xct-b, 1)) contrast(var(--xct-c, 1)) saturate(var(--xct-s, 1)) var(--xct-sharp, ) !important;
@@ -546,21 +546,21 @@
   `;
 
   function injectStyle() {
-    const css = CSS + HUD_CSS; // v2.0: include stilurile HUD
-    // Stylesheet "constructable" (nu e blocat de CSP), cu fallback pe <style>
+    const css = CSS + HUD_CSS; // v2.0: include the HUD styles
+    // Constructable stylesheet (not blocked by CSP), with <style> fallback
     try {
       const sheet = new CSSStyleSheet();
       sheet.replaceSync(css);
       document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
       return;
-    } catch (e) { /* trecem la fallback */ }
+    } catch (e) { /* fall through to the fallback */ }
     const style = document.createElement('style');
     style.id = 'xct-style';
     style.textContent = css;
     (document.head || document.documentElement).appendChild(style);
   }
 
-  /* ---------- Filtre video / boost imagine ---------- */
+  /* ---------- Video filters / image boost ---------- */
   function updateSharpenKernel() {
     const conv = document.getElementById('xct-conv');
     if (!conv) return;
@@ -639,18 +639,18 @@
     panelEl.append(h('h4', { text: 'Xbox Cloud' }));
 
     // --- Tastatura + mouse ---
-    panelEl.append(h('h5', { text: 'Tastatura + mouse' }));
+    panelEl.append(h('h5', { text: 'Keyboard & Mouse' }));
     const kbmLabel = h('label');
-    kbmLabel.append(h('input', { type: 'checkbox', 'data-k': 'kbm' }), ' Activeaza (Alt+K)');
+    kbmLabel.append(h('input', { type: 'checkbox', 'data-k': 'kbm' }), ' Enable (Alt+K)');
     panelEl.append(kbmLabel);
-    // Preset de taste
+    // Key preset
     const presetLabel = h('label');
-    presetLabel.append('Preset taste: ');
+    presetLabel.append('Key Preset: ');
     const presetSel = h('select', { 'data-s': 'preset' });
     [
       ['shooter', 'Shooter (FPS / TPS)'],
-      ['racing', 'Curse (Forza etc.)'],
-      ['standard', 'Standard (controller)'],
+      ['racing', 'Racing (Forza etc.)'],
+      ['standard', 'Standard (Controller)'],
     ].forEach(([v, t]) => {
       presetSel.append(h('option', { value: v, text: t }));
     });
@@ -659,10 +659,10 @@
     panelEl.append(presetLabel);
 
     [
-      ['mouseSens', 'Sensibilitate mouse', 20, 300],
-      ['adsSens', 'Sensibilitate la tintire (click dr.)', 20, 150],
-      ['deadzone', 'Compensare zona moarta', 0, 30],
-      ['steerSpeed', 'Viteza volan (curse)', 10, 100],
+      ['mouseSens', 'Mouse Sensitivity', 20, 300],
+      ['adsSens', 'Aim Sensitivity (Right Click)', 20, 150],
+      ['deadzone', 'Deadzone Compensation', 0, 30],
+      ['steerSpeed', 'Steering Response', 10, 100],
     ].forEach(([k, name, min, max]) => {
       const label = h('label');
       label.append(name + ': ', h('span', { 'data-v': k }), '%');
@@ -672,7 +672,7 @@
     const legendEl = h('small', { id: 'xct-legend' });
     const refreshLegend = () => {
       legendEl.textContent = (LEGENDS[settings.preset] || LEGENDS.shooter)
-        + ' Click pe imagine sau Alt+M blocheaza mouse-ul; Esc il elibereaza.';
+        + ' Click the video or press Alt+M to lock the mouse; Esc releases it.';
     };
     refreshLegend();
     presetSel.addEventListener('change', () => {
@@ -684,13 +684,13 @@
     });
     panelEl.append(legendEl);
 
-    // --- Imagine ---
-    panelEl.append(h('h5', { text: 'Imagine' }));
+    // --- Image ---
+    panelEl.append(h('h5', { text: 'Image' }));
     const sliders = [
-      ['brightness', 'Luminozitate', 50, 150],
+      ['brightness', 'Brightness', 50, 150],
       ['contrast', 'Contrast', 50, 150],
-      ['saturation', 'Saturatie', 0, 200],
-      ['sharpen', 'Nitidez (sharpen)', 0, 100],
+      ['saturation', 'Saturation', 0, 200],
+      ['sharpen', 'Sharpness', 0, 100],
     ];
     sliders.forEach(([k, name, min, max]) => {
       const label = h('label');
@@ -699,21 +699,21 @@
     });
     panelEl.append(
       h('button', { type: 'button', id: 'xct-boost', text: 'Boost' }),
-      h('button', { type: 'button', id: 'xct-reset', class: 'xct-alt', text: 'Reseteaza imaginea' }),
+      h('button', { type: 'button', id: 'xct-reset', class: 'xct-alt', text: 'Reset Image' }),
       h('small', {
-        text: 'Boost = nitidez + contrast + culoare, aplicate local pe imagine. '
-          + 'Rezolutia si bitrate-ul real le stabileste serverul Microsoft.',
+        text: 'Boost = sharpness + contrast + color, applied locally to the image. '
+          + 'The actual resolution and bitrate are set by the Microsoft server.',
       }),
-      h('small', { text: 'Alt+S statistici \u00b7 Alt+V panou \u00b7 Alt+P screenshot \u00b7 Alt+F ecran complet' })
+      h('small', { text: 'Alt+S stats \u00b7 Alt+V panel \u00b7 Alt+P screenshot \u00b7 Alt+F fullscreen' })
     );
 
-    // --- Timp jucat ---
-    panelEl.append(h('h5', { text: 'Timp jucat' }));
+    // --- Playtime ---
+    panelEl.append(h('h5', { text: 'Playtime' }));
     ptEl = h('div', { id: 'xct-pt' });
     ptEl.textContent = ptText();
-    const ptReset = h('button', { type: 'button', id: 'xct-pt-reset', class: 'xct-alt', text: 'Reseteaza timpul' });
+    const ptReset = h('button', { type: 'button', id: 'xct-pt-reset', class: 'xct-alt', text: 'Reset Playtime' });
     ptReset.addEventListener('click', () => {
-      if (!window.confirm('Stergi tot timpul jucat (sesiune, azi si total)?')) return;
+      if (!window.confirm('Delete all playtime (session, today and total)?')) return;
       playtime = { total: 0, days: {} };
       sessionSec = 0;
       savePlaytime();
@@ -745,7 +745,7 @@
     panelEl.querySelector('#xct-boost').addEventListener('click', () => {
       Object.assign(settings, { brightness: 100, contrast: 108, saturation: 115, sharpen: 45 });
       save(); syncControls(); applyFilters();
-      toast('Boost aplicat');
+      toast('Boost applied');
     });
 
     panelEl.querySelector('#xct-reset').addEventListener('click', () => {
@@ -759,7 +759,7 @@
     applyFilters();
   }
 
-  /* ---------- Statistici ---------- */
+  /* ---------- Stats ---------- */
   let prev = null;
 
   async function collectStats() {
@@ -784,17 +784,17 @@
   async function updateStats() {
     if (statsBusy || document.hidden) return;
     statsBusy = true;
-    try { await updateStatsInner(); } catch (e) { logOnce('statistici', e); } finally { statsBusy = false; }
+    try { await updateStatsInner(); } catch (e) { logOnce('stats', e); } finally { statsBusy = false; }
   }
 
   async function updateStatsInner() {
     if (!statsEl) return;
     if (!settings.statsVisible && !hudState.visible) return;
     const data = await collectStats();
-    try { hudIngest(data); } catch (e) { /* HUD nu blocheaza statisticile */ }
+    try { hudIngest(data); } catch (e) { /* HUD does not block the stats */ }
     if (!settings.statsVisible) return;
     if (!data) {
-      setTxt(statsEl, 'Xbox Cloud: astept streamul...\n' + ptText());
+      setTxt(statsEl, 'Xbox Cloud: waiting for stream...\n' + ptText());
       prev = null;
       return;
     }
@@ -823,19 +823,19 @@
       `RTT:       ${rtt}\n` +
       `FPS:       ${i.framesPerSecond != null ? Math.round(i.framesPerSecond) : '-'}\n` +
       `Bitrate:   ${bitrate}\n` +
-      `Rezolutie: ${res}\n` +
-      `Pierderi:  ${loss}\n` +
+      `Res:       ${res}\n` +
+      `Loss:      ${loss}\n` +
       `Jitter:    ${jitter}\n` +
       `Buffer:    ${jb}\n` +
-      `Decodare:  ${decode}\n` +
+      `Decode:    ${decode}\n` +
       ptText());
   }
 
   /* ====================================================================
    *  HUD Gaming (v2.0 Phase 1)
-   *  Metrici live + Connection Score + istoric (300 esantioane) + grafice.
-   *  Datele vin din updateStats() (acelasi getStats - zero apeluri in plus).
-   *  Randarea ruleaza prin requestAnimationFrame, doar cand s-au schimbat datele.
+   *  Live metrics + Connection Score + history (300 samples) + graphs.
+   *  Data comes from updateStats() (the same getStats - no extra calls).
+   *  Rendering runs through requestAnimationFrame, only when the data has changed.
    * ==================================================================== */
   const HUD_KEY = 'xcloud-toolkit-hud';
   const HIST_LEN = 300;
@@ -845,10 +845,10 @@
     if (typeof raw.visible === 'boolean') hudState.visible = raw.visible;
     if (raw.mode === 'compact' || raw.mode === 'detailed') hudState.mode = raw.mode;
     if (Number.isFinite(raw.x) && Number.isFinite(raw.y)) { hudState.x = raw.x; hudState.y = raw.y; }
-  } catch (e) { /* ignorat */ }
+  } catch (e) { /* ignored */ }
   const hudSave = () => { writeJSON(HUD_KEY, hudState); };
 
-  /* ---------- Istoric: buffer circular cu memorie fixa ---------- */
+  /* ---------- History: ring buffer with fixed memory ---------- */
   function makeRing(n) {
     const buf = new Float32Array(n).fill(NaN);
     let head = 0;
@@ -856,7 +856,7 @@
     return {
       push(v) { buf[head] = v; head = (head + 1) % n; if (count < n) count++; },
       get length() { return count; },
-      at(i) { return buf[(head - count + i + n) % n]; }, // 0 = cel mai vechi
+      at(i) { return buf[(head - count + i + n) % n]; }, // 0 = oldest
       clear() { buf.fill(NaN); head = 0; count = 0; },
     };
   }
@@ -864,15 +864,15 @@
   const histJit = makeRing(HIST_LEN);
   const histBr = makeRing(HIST_LEN);
 
-  /* ---------- Starea metricilor ---------- */
-  let hudPrev = null;      // contoare anterioare (pentru delta pe interval)
-  let hudM = null;         // ultimele metrici (null = fara stream)
-  let hudScoreVal = null;  // scor netezit 0-100
-  let hudGap = 0;          // cate cicluri la rand fara stream
+  /* ---------- Metrics state ---------- */
+  let hudPrev = null;      // previous counters (for per-interval deltas)
+  let hudM = null;         // latest metrics (null = no stream)
+  let hudScoreVal = null;  // smoothed score 0-100
+  let hudGap = 0;          // consecutive cycles without a stream
 
   const hudLin = (v, good, bad) => clamp(((bad - v) / (bad - good)) * 100, 0, 100);
 
-  // Coeficient de variatie al bitrate-ului pe ultimele 10 esantioane
+  // Coefficient of variation of the bitrate over the last 10 samples
   function hudBitrateCv() {
     const n = histBr.length;
     let cnt = 0;
@@ -888,9 +888,9 @@
     return Math.sqrt(Math.max(0, sq / cnt - mean * mean)) / mean;
   }
 
-  // Scor 0-100: RTT 30% · pierderi 30% · jitter 25% · stabilitate bitrate 15%.
-  // Componentele lipsa sunt excluse (ponderile se renormalizeaza). Plafon: o
-  // singura componenta foarte proasta nu poate fi "ascunsa" de celelalte.
+  // Score 0-100: RTT 30% · loss 30% · jitter 25% · bitrate stability 15%.
+  // Missing components are excluded (weights are renormalized). Cap: a
+  // single very bad component cannot be "hidden" by the others.
   function hudCalcScore(m) {
     const parts = [];
     if (m.rtt != null) parts.push([0.30, hudLin(m.rtt, 20, 150)]);
@@ -909,13 +909,13 @@
   const hudLevel = (s) => (s >= 85 ? 'excellent' : s >= 65 ? 'good' : s >= 40 ? 'fair' : 'poor');
   const HUD_LEVEL_TEXT = { excellent: 'Excellent', good: 'Good', fair: 'Fair', poor: 'Poor', none: 'Waiting' };
 
-  /* ---------- Primire date (apelata din updateStats, 1x / secunda) ---------- */
+  /* ---------- Data ingest (called from updateStats, 1x / second) ---------- */
   function hudIngest(data) {
     if (!data) {
       hudPrev = null;
       hudM = null;
       hudScoreVal = null;
-      // dupa ~10 s fara stream, istoricul vechi nu mai e relevant
+      // after ~10 s without a stream, the old history is no longer relevant
       if (hudGap < 10 && ++hudGap === 10) { histRtt.clear(); histJit.clear(); histBr.clear(); }
       hudSchedule();
       return;
@@ -937,7 +937,7 @@
     const p = hudPrev;
     hudPrev = cur;
     const dt = p ? (cur.t - p.t) / 1000 : 0;
-    // delta valid doar pe acelasi flux si fara resetare de contoare
+    // delta valid only on the same stream and without a counter reset
     const ok = !!p && p.id === cur.id && dt > 0 && dt <= 10
       && cur.bytes >= p.bytes && cur.recv >= p.recv && cur.frames >= p.frames;
 
@@ -974,7 +974,7 @@
     hudSchedule();
   }
 
-  /* ---------- Stiluri ---------- */
+  /* ---------- Styles ---------- */
   const HUD_CSS = `
     #xct-hud {
       position: fixed; left: 12px; bottom: 12px; z-index: 2147483645;
@@ -1014,7 +1014,7 @@
     #xct-hud .xh-cv { display: block; border-radius: 3px; background: rgba(255,255,255,.05); }
   `;
 
-  /* ---------- Grafice canvas ---------- */
+  /* ---------- Canvas graphs ---------- */
   const GRAPH_W = 264;
   const GRAPH_H = 34;
   const hudGraphs = [
@@ -1040,17 +1040,17 @@
     ctx.clearRect(0, 0, w, ht);
     const n = ring.length;
     let max = 0;
-    for (let k = 0; k < n; k++) { const v = ring.at(k); if (v > max) max = v; } // NaN ignorat
+    for (let k = 0; k < n; k++) { const v = ring.at(k); if (v > max) max = v; } // NaN ignored
     const last = n ? ring.at(n - 1) : NaN;
     if (n >= 2) {
       const scale = Math.max(g.floor, max) * 1.1;
       const step = w / (HIST_LEN - 1);
-      const x0 = w - (n - 1) * step; // cel mai nou esantion ramane in dreapta
+      const x0 = w - (n - 1) * step; // the newest sample stays on the right
       ctx.beginPath();
       let pen = false;
       for (let k = 0; k < n; k++) {
         const v = ring.at(k);
-        if (!(v >= 0)) { pen = false; continue; } // gol in grafic pentru NaN
+        if (!(v >= 0)) { pen = false; continue; } // gap in the graph for NaN
         const x = x0 + k * step;
         const y = ht - 1 - (v / scale) * (ht - 2);
         if (pen) ctx.lineTo(x, y); else { ctx.moveTo(x, y); pen = true; }
@@ -1078,7 +1078,7 @@
   let hudRaf = 0;
   const hudVals = {};
 
-  // Scrie in DOM doar daca textul s-a schimbat
+  // Write to the DOM only if the text has changed
   function setTxt(el, s) {
     if (el.__t !== s) { el.__t = s; el.textContent = s; }
   }
@@ -1109,7 +1109,7 @@
     if (hudState.mode === 'detailed') hudGraphs.forEach(hudDrawGraph);
   }
 
-  // Pozitioneaza fara sa modifice pozitia preferata salvata (clamp doar vizual)
+  // Positions without changing the saved preferred position (visual clamp only)
   function hudApplyPos(x, y) {
     const mx = Math.max(0, window.innerWidth - hudEl.offsetWidth);
     const my = Math.max(0, window.innerHeight - hudEl.offsetHeight);
@@ -1126,7 +1126,7 @@
     hudEl.classList.toggle('xh-detailed', detailed);
     hudEl.classList.toggle('xh-compact', !detailed);
     hudBtn.textContent = detailed ? '\u2212' : '+';
-    hudBtn.title = detailed ? 'Mod compact' : 'Mod detaliat';
+    hudBtn.title = detailed ? 'Compact mode' : 'Detailed mode';
     if (hudState.visible && hudState.x != null) hudApplyPos(hudState.x, hudState.y);
   }
 
@@ -1149,14 +1149,14 @@
       cancelAnimationFrame(hudRaf);
       hudRaf = 0;
     }
-    toast(hudState.visible ? 'HUD activ (Alt+G)' : 'HUD ascuns (Alt+G)');
+    toast(hudState.visible ? 'HUD enabled (Alt+G)' : 'HUD hidden (Alt+G)');
   }
 
   function hudInit() {
     if (hudEl) return;
     hudEl = h('div', { id: 'xct-hud', class: 'xh-compact' });
 
-    const head = h('div', { class: 'xh-head', title: 'Trage pentru a muta \u00b7 dublu-click = compact/detaliat' });
+    const head = h('div', { class: 'xh-head', title: 'Drag to move \u00b7 double-click = compact/detailed' });
     hudScoreNum = h('span', { class: 'xh-score', text: '--' });
     hudScoreLbl = h('span', { class: 'xh-lbl', text: HUD_LEVEL_TEXT.none });
     hudScoreNum.__t = '--';
@@ -1190,7 +1190,7 @@
     hudEl.append(head, grid, graphs);
     document.body.append(hudEl);
 
-    /* --- Drag (un singur set de listeneri, atasat o data) --- */
+    /* --- Drag (a single set of listeners, attached once) --- */
     let drag = null;
     let dragRaf = 0;
     const flushDrag = () => {
@@ -1201,7 +1201,7 @@
       if (e.button !== 0 || (e.target.closest && e.target.closest('.xh-btn'))) return;
       const r = hudEl.getBoundingClientRect();
       drag = { id: e.pointerId, dx: e.clientX - r.left, dy: e.clientY - r.top, nx: null, ny: null };
-      try { head.setPointerCapture(e.pointerId); } catch (err) { /* ignorat */ }
+      try { head.setPointerCapture(e.pointerId); } catch (err) { /* ignored */ }
     });
     head.addEventListener('pointermove', (e) => {
       if (!drag || e.pointerId !== drag.id) return;
@@ -1230,7 +1230,7 @@
     });
     hudBtn.addEventListener('click', hudToggleMode);
 
-    /* --- Resize: re-clamp, coalescat printr-un singur rAF --- */
+    /* --- Resize: re-clamp, coalesced through a single rAF --- */
     let resizeRaf = 0;
     window.addEventListener('resize', () => {
       if (resizeRaf) return;
@@ -1247,14 +1247,14 @@
 
   /* ====================================================================
    *  v2.1 - Automatic game detection + Profile Manager
-   *  Additiv: nu modifica HUD / WebRTC / Keyboard+Mouse. Foloseste doar
-   *  `settings`, PRESETS (suprascrieri keybind peste un snapshot de baza)
-   *  si elemente DOM proprii (rand in HUD, panou Profile Manager).
+   *  Additive: does not modify HUD / WebRTC / Keyboard+Mouse. Uses only
+   *  `settings`, PRESETS (keybind overrides on top of a base snapshot)
+   *  and its own DOM elements (HUD row, Profile Manager panel).
    * ==================================================================== */
   const GP_KEY = 'xcloud-toolkit-profiles';
   const GP_MAX = 100;
-  const GP_IDLE_MS = 3000; // interval normal de detectie
-  const GP_FAST_MS = 1000; // cat timp o tranzitie e in curs de confirmare
+  const GP_IDLE_MS = 3000; // normal detection interval
+  const GP_FAST_MS = 1000; // while a transition is being confirmed
   const GP_RANGE = { mouseSens: [20, 300], adsSens: [20, 150], deadzone: [0, 30], steerSpeed: [10, 100] };
   const GP_NUM = Object.keys(GP_RANGE);
   const GP_CATS = { Shooter: 'shooter', FPS: 'shooter', Racing: 'racing', Sandbox: 'standard', Default: null };
@@ -1268,7 +1268,7 @@
   const GP_CODE_RE = /^[A-Z][A-Za-z0-9]{1,23}$/;
   const GP_BAD_SLUG = /^(recently-played|all-games|library|catalog|search|home|new|popular|browse)$/i;
   const GP_GENERIC = /^(xbox|xbox cloud gaming|cloud gaming|play|home|loading|sign in|games?|catalog|library|microsoft|xbox\.com)$/i;
-  const GP_BASE_PRESETS = JSON.parse(JSON.stringify(PRESETS)); // snapshot inainte de orice suprascriere
+  const GP_BASE_PRESETS = JSON.parse(JSON.stringify(PRESETS)); // snapshot before any override
   const gpHas = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 
   const gp = {
@@ -1305,7 +1305,7 @@
     #xgp-pm .xgp-none { margin-top: 4px; font-size: 12px; opacity: .6; }
   `;
 
-  /* ---------- Normalizare / detectie nume ---------- */
+  /* ---------- Name normalization / detection ---------- */
   function gpNorm(s) {
     const raw = String(s || '');
     const n = raw.replace(/[\u2122\u00ae\u00a9]/g, '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
@@ -1333,7 +1333,7 @@
     const m = location.pathname.match(/\/(?:launch|games?)\/([^/?#]+)(?:\/([A-Za-z0-9]{12}))?/i);
     if (!m) return null;
     let slug = m[1];
-    try { slug = decodeURIComponent(slug); } catch (e) { /* ignorat */ }
+    try { slug = decodeURIComponent(slug); } catch (e) { /* ignored */ }
     let pid = m[2] ? m[2].toUpperCase() : '';
     if (/^[A-Za-z0-9]{12}$/.test(slug)) { if (!pid) pid = slug.toUpperCase(); slug = ''; }
     else if (GP_BAD_SLUG.test(slug)) return null;
@@ -1367,7 +1367,7 @@
             if (n) return n;
           }
         }
-      } catch (e) { /* ignorat */ }
+      } catch (e) { /* ignored */ }
     }
     return '';
   }
@@ -1396,7 +1396,7 @@
     return 'Default';
   };
 
-  /* ---------- Stocare ---------- */
+  /* ---------- Storage ---------- */
   function gpId() {
     let id;
     do { id = Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-3); }
@@ -1452,7 +1452,7 @@
       gpStore.active = out.some((p) => p.id === raw.active) ? raw.active : null;
     }
   } catch (e) {
-    logOnce('incarcare profile', e);
+    logOnce('loading profiles', e);
     gpStore = { v: 1, active: null, profiles: [] };
   }
 
@@ -1475,7 +1475,7 @@
     return p;
   }
 
-  /* ---------- Keybinds: snapshot de baza + suprascrieri ---------- */
+  /* ---------- Keybinds: base snapshot + overrides ---------- */
   function gpApplyBinds(p) {
     for (const name of Object.keys(GP_BASE_PRESETS)) {
       const t = PRESETS[name];
@@ -1489,10 +1489,10 @@
         else if (gpHas(BTN, v)) t[k] = BTN[v];
       }
     }
-    releaseAll(); // evita butoane ramase apasate dupa schimbarea mapei
+    releaseAll(); // avoids buttons left pressed after the map changes
   }
 
-  /* ---------- Sincronizare setari <-> profil activ ---------- */
+  /* ---------- Settings <-> active profile sync ---------- */
   function gpFlush() {
     const p = gpActive();
     if (!p) return false;
@@ -1508,17 +1508,17 @@
   }
 
   function gpApply(p, noFlush) {
-    if (!noFlush) gpFlush(); // salveaza setarile curente in profilul vechi
+    if (!noFlush) gpFlush(); // save the current settings into the old profile
     gpStore.active = p.id;
     for (const k of GP_NUM) settings[k] = p[k];
     if (settings.preset !== p.preset) {
       const sel = panelEl && panelEl.querySelector('[data-s="preset"]');
-      if (sel) { sel.value = p.preset; sel.dispatchEvent(new Event('change')); } // actualizeaza legenda existenta
+      if (sel) { sel.value = p.preset; sel.dispatchEvent(new Event('change')); } // updates the existing legend
       if (settings.preset !== p.preset) settings.preset = p.preset;
     }
     gpApplyBinds(p);
     save();
-    try { syncControls(); } catch (e) { /* ignorat */ }
+    try { syncControls(); } catch (e) { /* ignored */ }
     gpStoreSave();
     gpRenderHud();
   }
@@ -1577,12 +1577,12 @@
 
   function gpDetectStep() {
     const sig = location.href + '\u0001' + document.title;
-    if (sig === gp.sig && gp.curKey && !gp.candN) return; // nimic schimbat
+    if (sig === gp.sig && gp.curKey && !gp.candN) return; // nothing changed
     gp.sig = sig;
     const d = gpDetect();
     const k = d ? (d.pid || d.norm) : '';
     if (k === gp.curKey) { gp.candKey = ''; gp.candN = 0; return; }
-    if (!gp.candN || k !== gp.candKey) { gp.candKey = k; gp.candN = 1; return; } // confirmare pe 2 cicluri
+    if (!gp.candN || k !== gp.candKey) { gp.candKey = k; gp.candN = 1; return; } // confirmed over 2 cycles
     gp.candKey = '';
     gp.candN = 0;
     gpSetGame(d);
@@ -1604,7 +1604,7 @@
         gpDetectStep();
         if (gp.pmOpen) gpRenderPm();
       }
-    } catch (e) { logOnce('detectie joc', e); }
+    } catch (e) { logOnce('game detection', e); }
     gpSchedule();
   }
 
@@ -1619,7 +1619,7 @@
     gp.timer = 0;
   }
 
-  /* ---------- Operatii Profile Manager ---------- */
+  /* ---------- Profile Manager operations ---------- */
   function gpDelete(p) {
     const wasActive = gpStore.active === p.id;
     gpStore.profiles = gpStore.profiles.filter((q) => q !== p);
@@ -1650,7 +1650,7 @@
     gpUi.io.value = txt;
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).catch(() => {});
-    } catch (e) { /* ignorat */ }
+    } catch (e) { /* ignored */ }
     toast('Exported ' + list.length + ' profile(s)');
   }
 
@@ -1674,7 +1674,7 @@
     toast(n ? 'Imported ' + n + ' profile(s)' : 'Import: no valid profiles');
   }
 
-  /* ---------- UI: HUD (rand adaugat) ---------- */
+  /* ---------- UI: HUD (added row) ---------- */
   function gpRenderHud() {
     if (!gpHudG) return;
     const p = gpActive();
@@ -1904,7 +1904,7 @@
       sheet.replaceSync(GP_CSS);
       document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
       return;
-    } catch (e) { /* trecem la fallback */ }
+    } catch (e) { /* fall through to the fallback */ }
     const style = document.createElement('style');
     style.id = 'xgp-style';
     style.textContent = GP_CSS;
@@ -1917,7 +1917,7 @@
     gpInjectStyle();
     gpBuildUi();
 
-    // Randuri in HUD (adaugate, fara a modifica codul HUD)
+    // HUD rows (added, without modifying the HUD code)
     const grid = hudEl ? hudEl.querySelector('.xh-grid') : null;
     if (grid) {
       gpHudG = h('span', { class: 'xgp-v', text: '-' });
@@ -1930,7 +1930,7 @@
       ), grid);
     }
 
-    // Intrare in panoul existent
+    // Entry in the existing panel
     if (panelEl) {
       const openBtn = h('button', { type: 'button', class: 'xct-alt', text: 'Profile Manager (Alt+J)' });
       openBtn.addEventListener('click', () => gpTogglePm());
@@ -1938,27 +1938,27 @@
     }
     document.body.append(gpUi.root);
 
-    // Starea salvata: setarile curente sunt sursa de adevar la pornire
+    // Saved state: the current settings are the source of truth at startup
     gpFlush();
     gpApplyBinds(gpActive());
 
-    window.addEventListener('keydown', gpOnKeyDown, true); // inregistrat inaintea listenerilor KBM
+    window.addEventListener('keydown', gpOnKeyDown, true); // registered before the KBM listeners
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') gpFlush();
     });
     gpRenderHud();
   }
 
-  /* ---------- Screenshot & ecran complet ---------- */
+  /* ---------- Screenshot & fullscreen ---------- */
   function screenshot() {
     const video = document.querySelector('video');
-    if (!video || !video.videoWidth) { toast('Nu exista un stream video'); return; }
+    if (!video || !video.videoWidth) { toast('No video stream available'); return; }
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext('2d').drawImage(video, 0, 0);
     canvas.toBlob((blob) => {
-      if (!blob) { toast('Screenshot esuat'); return; }
+      if (!blob) { toast('Screenshot failed'); return; }
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = `xcloud-${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
@@ -1966,16 +1966,16 @@
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-      toast('Screenshot salvat');
+      toast('Screenshot saved');
     }, 'image/png');
   }
 
   function toggleFullscreen() {
     if (document.fullscreenElement) document.exitFullscreen();
-    else document.documentElement.requestFullscreen().catch(() => toast('Ecran complet blocat'));
+    else document.documentElement.requestFullscreen().catch(() => toast('Fullscreen blocked'));
   }
 
-  /* ---------- Scurtaturi ---------- */
+  /* ---------- Shortcuts ---------- */
   function onKey(e) {
     if (!e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
     switch (e.code) {
@@ -2009,7 +2009,7 @@
     e.preventDefault();
   }
 
-  /* ---------- Ciclu de viata: timere, observer, salvare ---------- */
+  /* ---------- Lifecycle: timers, observer, saving ---------- */
   let statsTimer = 0;
   let playtimeTimer = 0;
   let filterObserver = null;
@@ -2018,10 +2018,10 @@
 
   function runFilters() {
     filtersRaf = 0;
-    try { applyFilters(); } catch (e) { logOnce('filtre', e); }
+    try { applyFilters(); } catch (e) { logOnce('filters', e); }
   }
 
-  // Reactioneaza doar la noduri <video> adaugate; un singur rAF pe cadru
+  // Reacts only to added <video> nodes; a single rAF per frame
   function onDomMutations(muts) {
     if (filtersRaf) return;
     for (const m of muts) {
@@ -2046,7 +2046,7 @@
   }
 
   function startTimers() {
-    stopTimers(); // niciodata doua seturi de timere
+    stopTimers(); // never two sets of timers
     lastTick = Date.now();
     statsTimer = setInterval(updateStats, 1000);
     playtimeTimer = setInterval(tickPlaytime, 1000);
@@ -2055,7 +2055,7 @@
   }
 
   function persistState() {
-    try { savePlaytime(); flushSettingsNow(); gpFlush(); } catch (e) { logOnce('salvare stare', e); }
+    try { savePlaytime(); flushSettingsNow(); gpFlush(); } catch (e) { logOnce('saving state', e); }
   }
 
   function onPageHide() {
@@ -2064,7 +2064,7 @@
     stopTimers();
   }
 
-  // beforeunload poate fi anulat de utilizator: reporneste timerele daca pagina ramane
+  // beforeunload can be cancelled by the user: restart the timers if the page stays
   function onBeforeUnload() {
     persistState();
     stopTimers();
@@ -2075,7 +2075,7 @@
     if (e.persisted) { unloading = false; startTimers(); }
   }
 
-  /* ---------- Pornire ---------- */
+  /* ---------- Startup ---------- */
   let initDone = false;
   function init() {
     if (initDone) return;
@@ -2098,7 +2098,7 @@
         if (kbmEnabled && document.pointerLockElement) e.preventDefault();
       }, true);
       document.addEventListener('pointerlockchange', () => {
-        if (document.pointerLockElement) toast('Mouse blocat. Esc pentru a-l elibera.');
+        if (document.pointerLockElement) toast('Mouse locked. Press Esc to release.');
         else {
           vpad.buttons.forEach((_, i) => { if (i === BTN.RT || i === BTN.LT) setButton(i, false); });
           mdx = 0; mdy = 0;
@@ -2116,10 +2116,10 @@
       });
 
       if (settings.kbm) setKbm(true, true);
-      toast('Xbox Cloud activ \u2022 Alt+V = panou, Alt+K = tastatura + mouse, Alt+G = HUD');
-      console.log('[Xbox Cloud] interfata initializata');
+      toast('Xbox Cloud active \u2022 Alt+V = panel, Alt+K = keyboard & mouse, Alt+G = HUD');
+      console.log('[Xbox Cloud] interface initialized');
     } catch (e) {
-      console.error('[Xbox Cloud] eroare la initializare:', e);
+      console.error('[Xbox Cloud] initialization error:', e);
     }
   }
 
