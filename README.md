@@ -33,11 +33,16 @@ The toolkit automatically detects Xbox Cloud Gaming titles and loads the appropr
 
 #### ARC Raiders → Shooter Profile
 
-![ARC Raiders](screenshots/arc-raiders.png)
+<img width="1920" height="1080" alt="Screenshot 2026-11-11 103246" src="https://github.com/user-attachments/assets/efe6fa78-bee0-4f39-9c84-9ef277f2aded" />
+<img width="1920" height="1080" alt="Screenshot 2026-11-11 103207" src="https://github.com/user-attachments/assets/1c82d7d5-a287-4b7f-9311-d1630753a3aa" />
+
 
 #### Forza Horizon 6 → Racing Profile
 
-![Forza Horizon 6](screenshots/forza-horizon6.png)
+<img width="1920" height="1080" alt="Screenshot 2026-11-11 102532" src="https://github.com/user-attachments/assets/412ebb55-f631-4b6c-be49-d4060fcd01e3" />
+<img width="1920" height="1080" alt="Screenshot 2026-11-11 102459" src="https://github.com/user-attachments/assets/ba5458cb-905f-416f-8322-77b0b2abf0e2" />
+<img width="1920" height="1080" alt="Screenshot 2026-11-11 102426" src="https://github.com/user-attachments/assets/20540350-91f5-475e-98d5-76fd157544ac" />
+
 
 #### No Man's Sky → Sandbox Profile
 
