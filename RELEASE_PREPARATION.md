@@ -10,10 +10,9 @@ This distribution includes two separately versioned, user-tested installation op
 
 ## Chrome / Edge — v2.1.2
 
-- Source: [extension changes in pull request #3](https://github.com/BlaNkS01/xcloud-toolkit/pull/3).
+- Source: [extension folder](./extension/) (merged from [pull request #3](https://github.com/BlaNkS01/xcloud-toolkit/pull/3)).
 - The extension has been tested by the project maintainer.
-- Until PR #3 is merged, the extension is **not** available from the default branch.
-- To install from the PR branch, open PR #3, choose its **Files changed** or branch view, and download the branch ZIP from GitHub. Extract it.
+- Download the [repository ZIP](https://github.com/BlaNkS01/xcloud-toolkit/archive/refs/heads/main.zip) and extract it.
 - Open `chrome://extensions` or `edge://extensions`, enable **Developer mode**, select **Load unpacked**, and choose the extracted `extension` directory containing `manifest.json`.
 - Disable the Tampermonkey script when using the extension to avoid injecting the toolkit twice.
 
@@ -21,7 +20,7 @@ This distribution includes two separately versioned, user-tested installation op
 
 The Tampermonkey and extension versions are different by design. Do not rename the extension to v2.1.1 or imply it is merged before the PR is merged.
 
-No new downloadable extension ZIP or GitHub Release has been published by this document alone. Once PR #3 is merged, package the `extension` folder as a ZIP and attach it along with the userscript to a GitHub Release.
+The extension is now merged into `main`. A standalone extension ZIP and a GitHub Release have not yet been published. Until then, use the repository ZIP and load its `extension` folder.
 
 This project is independent and is not affiliated with Microsoft or Xbox.
 
