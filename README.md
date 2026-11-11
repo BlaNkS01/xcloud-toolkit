@@ -10,6 +10,8 @@ Keyboard & Mouse · Virtual Xbox Controller · Game Profiles · Performance HUD 
 ![Platform](https://img.shields.io/badge/platform-Xbox%20Cloud%20Gaming-107C10?style=flat-square)
 ![Userscript](https://img.shields.io/badge/userscript-Tampermonkey-blue?style=flat-square)
 
+[![Install with Tampermonkey](https://img.shields.io/badge/Install%20Script-Tampermonkey-107C10?style=for-the-badge&logo=tampermonkey&logoColor=white)](https://github.com/BlaNkS01/xcloud-toolkit/raw/refs/heads/main/xcloud-toolkit_v2_1_1.js)
+
 [**Install**](#-installation) · [**Features**](#-features) · [**Screenshots**](#-screenshots) · [**Shortcuts**](#-keyboard-shortcuts) · [**Troubleshooting**](#-troubleshooting)
 
 </div>
@@ -25,7 +27,7 @@ It runs as a browser userscript on supported Xbox Cloud Gaming pages. **It does 
 ## 🚀 Installation
 
 1. Install a browser userscript manager such as [Tampermonkey](https://www.tampermonkey.net/) and enable userscripts as required by your browser.
-2. Open the [Xbox Cloud Toolkit userscript](./xcloud-toolkit_v2_1_1.js).
+2. Click the **Install Script** button above to open the current userscript source, or open the [Xbox Cloud Toolkit userscript](./xcloud-toolkit_v2_1_1.js).
 3. Click **Raw** on GitHub, then follow your userscript manager's installation prompt. If no prompt appears, create a new userscript in Tampermonkey, paste the script contents, and save it.
 4. Open [Xbox Cloud Gaming](https://www.xbox.com/play) or [play.xbox.com](https://play.xbox.com/).
 5. Start a cloud gaming session and press **Alt + V** to show the toolkit panel.
