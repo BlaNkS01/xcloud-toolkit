@@ -1039,6 +1039,10 @@
 
   /* ---------- Styles ---------- */
   const HUD_CSS = `
+    #xct-hud .xgp-hud { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; padding-bottom: 5px; }
+    #xct-hud .xgp-cell { min-width: 0; }
+    #xct-hud .xgp-k { display: block; font-size: 9px; opacity: .55; }
+    #xct-hud .xgp-v { display: block; font-size: 12px; font-weight: 600; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     #xct-hud {
       position: fixed; left: 12px; bottom: 12px; z-index: 2147483645;
       width: 280px; box-sizing: border-box; padding: 6px 8px 8px;
@@ -1153,6 +1157,7 @@
   function hudRender() {
     hudRaf = 0;
     if (!hudEl || !hudState.visible) return;
+    gpRenderHud();
     const m = hudM;
     const f = (v, d) => (v == null ? '-' : v.toFixed(d));
     setTxt(hudVals.fps, m ? f(m.fps, 0) : '-');
@@ -1252,6 +1257,7 @@
 
     hudEl.append(head, grid, graphs);
     document.body.append(hudEl);
+    gpRenderHud(); // Keep game/profile rows independent of Profile Manager startup.
 
     /* --- Drag (a single set of listeners, attached once) --- */
     let drag = null;
@@ -1358,10 +1364,6 @@
   let gpHudP = null;
 
   const GP_CSS = `
-    #xct-hud .xgp-hud { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; padding-bottom: 5px; }
-    #xct-hud .xgp-cell { min-width: 0; }
-    #xct-hud .xgp-k { display: block; font-size: 9px; opacity: .55; }
-    #xct-hud .xgp-v { display: block; font-size: 12px; font-weight: 600; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     #xgp-pm {
       position: fixed; top: 12px; left: 284px; z-index: 2147483646;
       width: 300px; max-height: calc(100vh - 80px); overflow: auto; box-sizing: border-box;
@@ -1753,11 +1755,29 @@
   }
 
   /* ---------- UI: HUD (added row) ---------- */
+  function gpEnsureHud() {
+    if (!hudEl) return;
+    let row = hudEl.querySelector('.xgp-hud');
+    if (!row) {
+      gpHudG = h('span', { class: 'xgp-v', 'data-xgp': 'game' });
+      gpHudP = h('span', { class: 'xgp-v', 'data-xgp': 'profile' });
+      row = h('div', { class: 'xgp-hud' },
+        h('div', { class: 'xgp-cell' }, h('span', { class: 'xgp-k', text: 'Current Game:' }), gpHudG),
+        h('div', { class: 'xgp-cell' }, h('span', { class: 'xgp-k', text: 'Current Profile:' }), gpHudP)
+      );
+      hudEl.insertBefore(row, hudEl.querySelector('.xh-grid'));
+    } else {
+      gpHudG = row.querySelector('[data-xgp="game"]');
+      gpHudP = row.querySelector('[data-xgp="profile"]');
+    }
+  }
+
   function gpRenderHud() {
-    if (!gpHudG) return;
+    gpEnsureHud();
+    if (!gpHudG || !gpHudP) return;
     const p = gpActive();
-    setTxt(gpHudG, gp.cur ? gp.cur.name : '-');
-    setTxt(gpHudP, p ? p.name : '-');
+    setTxt(gpHudG, gp.cur ? gp.cur.name : 'No game detected');
+    setTxt(gpHudP, p ? p.name : 'Default');
   }
 
   /* ---------- UI: Profile Manager ---------- */
@@ -1994,19 +2014,6 @@
     gp.inited = true;
     gpInjectStyle();
     gpBuildUi();
-
-    // HUD rows (added, without modifying the HUD code)
-    const grid = hudEl ? hudEl.querySelector('.xh-grid') : null;
-    if (grid) {
-      gpHudG = h('span', { class: 'xgp-v', text: '-' });
-      gpHudP = h('span', { class: 'xgp-v', text: '-' });
-      gpHudG.__t = '-';
-      gpHudP.__t = '-';
-      hudEl.insertBefore(h('div', { class: 'xgp-hud' },
-        h('div', { class: 'xgp-cell' }, h('span', { class: 'xgp-k', text: 'Current Game:' }), gpHudG),
-        h('div', { class: 'xgp-cell' }, h('span', { class: 'xgp-k', text: 'Current Profile:' }), gpHudP)
-      ), grid);
-    }
 
     // Entry in the existing panel
     if (panelEl) {
