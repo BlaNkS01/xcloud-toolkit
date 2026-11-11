@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Xbox Cloud
 // @namespace    local.xcloud.toolkit
-// @version      2.1.1
+// @version      2.1.2
 // @description  Stream stats, image boost, keyboard & mouse (virtual gamepad), screenshot and shortcuts for xCloud (play.xbox.com and xbox.com/play). Does not change region or connection.
 // @match        https://play.xbox.com/*
 // @match        https://www.xbox.com/*/play*
@@ -284,6 +284,8 @@
   let kbmEnabled = false;
   let mdx = 0;
   let mdy = 0;
+  let mouseX = 0;
+  let mouseY = 0;
   let kbmLoopRunning = false;
   const mouseHeld = new Set();
   let steer = 0;
@@ -341,6 +343,8 @@
     vpad.axes = [0, 0, 0, 0];
     mdx = 0;
     mdy = 0;
+    mouseX = 0;
+    mouseY = 0;
     mouseHeld.clear();
     clearTimeout(wheelTimer);
     wheelTimer = null;
@@ -383,14 +387,27 @@
 
     // Reduced sensitivity while aiming (right click = LT pressed)
     const ads = !racing && vpad.buttons[BTN.LT].pressed ? settings.adsSens / 100 : 1;
-    const f = 0.04 * (settings.mouseSens / 100) * ads;
-    let rx = mdx * f;
-    let ry = mdy * f;
-    // Deadzone compensation: small movements get past the threshold the game ignores
+    // Convert pixels to velocity at a 60 Hz reference rate. This avoids
+    // stronger camera input on slower frames and is gentler at every saved sensitivity.
+    const frameScale = 1 / (60 * Math.max(dt, 1 / 240));
+    const f = 0.006 * (settings.mouseSens / 100) * ads * frameScale;
+    let tx = mdx * f;
+    let ty = mdy * f;
+    const targetMag = Math.hypot(tx, ty);
+    if (targetMag > 1) { tx /= targetMag; ty /= targetMag; }
+    // Time-based smoothing (25 ms), including a short, bounded return to rest.
+    const blend = 1 - Math.exp(-Math.max(dt, 0) / 0.025);
+    mouseX += (tx - mouseX) * blend;
+    mouseY += (ty - mouseY) * blend;
+    if (Math.hypot(mouseX, mouseY) < 0.001) { mouseX = 0; mouseY = 0; }
+    let rx = mouseX;
+    let ry = mouseY;
+    // Compensate radially AFTER smoothing so the game can still see fine input.
+    // Fade the compensation near rest instead of jumping straight to the deadzone.
     const mag = Math.hypot(rx, ry);
     if (mag > 0) {
       const dz = settings.deadzone / 100;
-      const scaled = Math.min(1, dz + (1 - dz) * Math.min(mag, 1));
+      const scaled = Math.min(1, dz * Math.min(mag / 0.05, 1) + (1 - dz) * mag);
       rx = (rx / mag) * scaled;
       ry = (ry / mag) * scaled;
     }
@@ -497,8 +514,8 @@
 
   function onKbmMouseMove(e) {
     if (kbmEnabled && document.pointerLockElement) {
-      mdx += e.movementX || 0;
-      mdy += e.movementY || 0;
+      if (Number.isFinite(e.movementX)) mdx += e.movementX;
+      if (Number.isFinite(e.movementY)) mdy += e.movementY;
     }
   }
 
@@ -2174,6 +2191,10 @@
           });
           mdx = 0;
           mdy = 0;
+          mouseX = 0;
+          mouseY = 0;
+          vpad.axes[2] = 0;
+          vpad.axes[3] = 0;
           mouseHeld.clear();
         }
       });

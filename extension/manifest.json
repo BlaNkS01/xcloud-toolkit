@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Xbox Cloud Toolkit",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Stream stats, image controls, keyboard and mouse virtual gamepad, screenshots and game profiles for Xbox Cloud Gaming.",
   "content_scripts": [
     {
