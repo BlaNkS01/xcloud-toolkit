@@ -278,6 +278,7 @@
     vibrationActuator: null,
   };
   const keysDown = new Set();
+  const keyBindingsDown = new Map(); // remember the button assigned at keydown
   const buttonSources = new Map();
   const analogButtons = new Map();
   let kbmEnabled = false;
@@ -333,6 +334,7 @@
 
   function releaseAll() {
     keysDown.clear();
+    keyBindingsDown.clear();
     buttonSources.clear();
     analogButtons.clear();
     vpad.buttons.forEach((_, i) => setButton(i, false));
@@ -475,16 +477,21 @@
     if (!isMove && !(code in map)) return;
     e.preventDefault();
     e.stopPropagation();
+    if (keysDown.has(code)) return; // ignore repeat without remapping a held key
     keysDown.add(code);
-    if (code in map) setSourceButton('key:' + code, map[code], true);
+    if (code in map) {
+      keyBindingsDown.set(code, map[code]);
+      setSourceButton('key:' + code, map[code], true);
+    }
   }
 
   function onKbmKeyUp(e) {
     const code = e.code;
     if (!keysDown.has(code)) return;
     keysDown.delete(code);
-    const map = activeMap();
-    if (code in map) setSourceButton('key:' + code, map[code], false);
+    const assigned = keyBindingsDown.get(code);
+    keyBindingsDown.delete(code);
+    if (assigned !== undefined) setSourceButton('key:' + code, assigned, false);
     if (kbmEnabled) { e.preventDefault(); e.stopPropagation(); }
   }
 
@@ -514,10 +521,9 @@
   // Mouse wheel = switch weapon (short press on Y), shooter mode only
   let wheelTimer = null;
   function onKbmWheel(e) {
-    if (!kbmEnabled || !document.pointerLockElement) return;
+    if (!kbmEnabled || !document.pointerLockElement || settings.preset !== 'shooter') return;
     e.preventDefault();
     e.stopPropagation();
-    if (settings.preset !== 'shooter') return;
     setSourceButton('wheel', BTN.Y, true);
     clearTimeout(wheelTimer);
     wheelTimer = setTimeout(() => {
@@ -842,7 +848,7 @@
     let bitrate = '-';
     if (prev && prev.bytes != null) {
       const dt = (now - prev.t) / 1000;
-      if (dt > 0) bitrate = (((i.bytesReceived - prev.bytes) * 8) / dt / 1e6).toFixed(1) + ' Mbps';
+      if (dt > 0 && i.bytesReceived >= prev.bytes) bitrate = (((i.bytesReceived - prev.bytes) * 8) / dt / 1e6).toFixed(1) + ' Mbps';
     }
     prev = { t: now, bytes: i.bytesReceived };
 
@@ -978,7 +984,8 @@
     const dt = p ? (cur.t - p.t) / 1000 : 0;
     // delta valid only on the same stream and without a counter reset
     const ok = !!p && p.id === cur.id && dt > 0 && dt <= 10
-      && cur.bytes >= p.bytes && cur.recv >= p.recv && cur.frames >= p.frames;
+      && cur.bytes >= p.bytes && cur.recv >= p.recv && cur.lost >= p.lost
+      && cur.frames >= p.frames && cur.dec >= p.dec && cur.jbD >= p.jbD && cur.jbN >= p.jbN;
 
     const m = {
       fps: i.framesPerSecond != null ? i.framesPerSecond : null,
@@ -2184,6 +2191,7 @@
       toast('Xbox Cloud active \u2022 Alt+V = panel, Alt+K = keyboard & mouse, Alt+G = HUD');
       console.log('[Xbox Cloud] interface initialized');
     } catch (e) {
+      initDone = false; // allow retry after a transient initialization failure
       console.error('[Xbox Cloud] initialization error:', e);
     }
   }
