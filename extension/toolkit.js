@@ -71,7 +71,7 @@
     saturation: 100,
     sharpen: 0,        // 0-100
     kbm: false,        // keyboard + mouse
-    mouseSens: 100,    // 20-300 (%)
+    mouseSens: 100,    // 20-500 (%)
     preset: 'shooter', // 'shooter' | 'standard' | 'racing'
     steerSpeed: 60,    // 10-100 how fast the wheel turns (racing)
     adsSens: 70,       // 20-150 (%) while right click is held (aiming)
@@ -79,7 +79,7 @@
   };
   const SETTING_RANGE = {
     brightness: [50, 150], contrast: [50, 150], saturation: [0, 200], sharpen: [0, 100],
-    mouseSens: [20, 300], steerSpeed: [10, 100], adsSens: [20, 150], deadzone: [0, 30],
+    mouseSens: [20, 500], steerSpeed: [10, 100], adsSens: [20, 150], deadzone: [0, 30],
   };
   let settings = { ...defaults };
   try {
@@ -721,7 +721,7 @@
     panelEl.append(presetLabel);
 
     [
-      ['mouseSens', 'Mouse Sensitivity', 20, 300],
+      ['mouseSens', 'Mouse Sensitivity', 20, 500],
       ['adsSens', 'Aim Sensitivity (Right Click)', 20, 150],
       ['deadzone', 'Deadzone Compensation', 0, 30],
       ['steerSpeed', 'Steering Response', 10, 100],
@@ -1318,7 +1318,7 @@
   const GP_MAX = 100;
   const GP_IDLE_MS = 3000; // normal detection interval
   const GP_FAST_MS = 1000; // while a transition is being confirmed
-  const GP_RANGE = { mouseSens: [20, 300], adsSens: [20, 150], deadzone: [0, 30], steerSpeed: [10, 100] };
+  const GP_RANGE = { mouseSens: [20, 500], adsSens: [20, 150], deadzone: [0, 30], steerSpeed: [10, 100] };
   const GP_NUM = Object.keys(GP_RANGE);
   const GP_CATS = { Shooter: 'shooter', FPS: 'shooter', Racing: 'racing', Sandbox: 'standard', Default: null };
   const GP_RULES = [
