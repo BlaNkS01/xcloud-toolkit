@@ -85,6 +85,17 @@ Monitor your Xbox Cloud Gaming session in real time:
 | Alt + J | Profile Manager |
 
 ---
+## Changes
+
+- Complete English UI translation
+- English tooltips
+- English notifications
+- English console messages
+- Improved profile manager localization
+
+No functional changes.
+
+---
 
 ## 🌐 Supported Websites
 
