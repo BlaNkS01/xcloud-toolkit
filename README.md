@@ -16,7 +16,7 @@ Keyboard & Mouse · Virtual Xbox Controller · Game Profiles · Performance HUD 
 [![Install with Tampermonkey](https://img.shields.io/badge/Install%20Script-Tampermonkey-107C10?style=for-the-badge&logo=tampermonkey&logoColor=white)](https://github.com/BlaNkS01/xcloud-toolkit/raw/refs/heads/main/xcloud-toolkit_v2_1_1.js)
 [![Get Chrome / Edge Extension](https://img.shields.io/badge/Get%20Extension-Chrome%20%2F%20Edge-0078D7?style=for-the-badge&logo=googlechrome&logoColor=white)](./extension/)
 
-[**Install**](#-installation) · [**Changelog**](./CHANGELOG.md) · [**Contributing**](./CONTRIBUTING.md) · [**Security**](./SECURITY.md) · [**Features**](#-features) · [**Screenshots**](#-screenshots) · [**Shortcuts**](#-keyboard-shortcuts) · [**Troubleshooting**](#-troubleshooting)
+[**ToolNovaHub — Free Online Tools**](https://toolnovahub.github.io/) · [**Our Projects**](https://toolnovahub.github.io/projects/) · [**Install**](#-installation) · [**Changelog**](./CHANGELOG.md) · [**Contributing**](./CONTRIBUTING.md) · [**Security**](./SECURITY.md) · [**Features**](#-features) · [**Screenshots**](#-screenshots) · [**Shortcuts**](#-keyboard-shortcuts) · [**Troubleshooting**](#-troubleshooting)
 
 </div>
 
